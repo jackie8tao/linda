@@ -6,13 +6,11 @@
 
 #include <types.h>
 
-#define USERBASE        0x0
-#define KERNLINK        0x100000            // 1M地址处开始装载内核
-#define KERNBASE        0xC0000000          // 内核虚拟空间起始地址3G
+#define EXTMEM          0x100000                                // 扩展内存开始位置
+#define KERNBASE        0xC0000000                              // 内核虚拟空间起始地址3G
+#define KERNLINK        (KERNBASE+EXTMEM)                       // 内核链接位置
 
-#define MEMSIZE         0x10000000          // 内存的大小固定为256M
-
-#define P2V(addr)       ((uint_t)(addr) + KERNBASE)
-#define V2P(addr)       ((uint_t)(addr) - KERNBASE)
+#define P2V(addr)       ((uint_t)(addr) + KERNBASE)             // 内核空间物理地址转为虚拟地址
+#define V2P(addr)       ((uint_t)(addr) - KERNBASE)             // 内核空间虚拟地址转为物理地址
 
 #endif

@@ -3,8 +3,8 @@
 
 #include <stdarg.h>
 
-void kprintf(char *fmt, ...);
-
-void panic(char *msg, ...);
+int sprintf(char *buf, const char *fmt, ...);
+int kprintf(const char *fmt, ...);
+int panic(const char *fmt, ...);
 
 #endif

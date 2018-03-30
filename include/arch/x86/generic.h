@@ -1,100 +1,66 @@
-#ifndef __ASM_GENERIC_H
-#define __ASM_GENERIC_H
+#ifndef __LINDA_GENERIC_H
+#define __LINDA_GENERIC_H
 
 #include <types.h>
+
+static inline void 
+io_wait()
+{
+    asm volatile("outb %%al, $0x80"::"a"(0));
+}
 
 static inline uchar_t
 inb(ushort_t port)
 {
     uchar_t res;
-
-    asm volatile(
-        "inb %1, %0"
-        :"=a"(res)
-        :"r"(port)
-    );
-
+    asm volatile("inb %1, %0" :"=a"(res) :"r"(port));
     return res;
 }
 
 static inline void
 outb(ushort_t port, uchar_t cnt)
 {
-    asm volatile(
-        "outb %1, %0"
-        :
-        : "r"(port), "a"(cnt)
-    );
+    asm volatile("outb %1, %0" : : "r"(port), "a"(cnt));
 }
 
 static inline ushort_t
 inw(ushort_t port)
 {
     uchar_t res;
-
-    asm volatile(
-        "inw %1, %0"
-        :"=a"(res)
-        :"r"(port)
-    );
-
+    asm volatile("inw %1, %0" :"=a"(res) :"r"(port));
     return res;
 }
 
 static inline void
 outw(ushort_t port, ushort_t cnt)
 {
-    asm volatile(
-        "outw %1, %0"
-        :
-        : "r"(port), "a"(cnt)
-    );
+    asm volatile("outw %1, %0" : : "r"(port), "a"(cnt));
 }
 
 static inline uint_t
 inl(ushort_t port)
 {
     uint_t res;
-
-    asm volatile(
-        "inl %1, %0"
-        :"=a"(res)
-        :"r"(port)
-    );
-
+    asm volatile("inl %1, %0" :"=a"(res) :"r"(port));
     return res;
 }
 
 static inline void 
 outl(ushort_t port, uint_t cnt)
 {
-    asm volatile(
-        "outl %1, %0"
-        :
-        : "r"(port), "a"(cnt)
-    );
+    asm volatile("outl %1, %0" : : "r"(port), "a"(cnt));
 }
 
 static inline void 
 insb(ushort_t port, void* dst, int count)
 {
-    asm volatile(
-        "cld;rep insl"
-        :
-        :"D"(dst), "c"(count), "d"(port)
-        :"memory", "cc"
-    );
+    asm volatile("cld;rep insl" : :"D"(dst), "c"(count), "d"(port) :"memory", "cc");
 }
 
 static inline void 
 insw(ushort_t port, void* dst, int count)
 {
-    asm volatile(
-        "cld;rep insl"
-        :
-        :"D"(dst), "c"(count), "d"(port)
-        :"memory", "cc"
-    );
+    asm volatile("cld;rep insl" : :"D"(dst), "c"(count), "d"(port) :"memory", "cc");
 }
 
 static inline void 
@@ -106,7 +72,7 @@ insl(ushort_t port, void* dst, int count)
         :"D"(dst), "c"(count), "d"(port)
         :"memory", "cc"
     );
-}z
+}
 
 static inline void 
 outsb(ushort_t port, void* src, int count)
@@ -207,6 +173,20 @@ stosl(void* dst, uint_t cnt, int count)
     );
 }
 
+static inline uint_t 
+xchg(volatile uint_t *addr, uint_t newval)
+{
+    uint_t result;
+    asm volatile(
+        "lock; xchgl %0, %1"
+        : "+m"(*addr), "=a"(result)
+        : "l"(newval)
+        : "cc"
+    );
+
+    return result;
+}
+
 static inline void
 sti()
 {
@@ -218,37 +198,5 @@ cli()
 {
     asm volatile ("cli");
 }
-
-static inline void
-__attribute__((always_inline))
-pdtbl_load(void* pdtbl, uint_t attr)
-{
-    attr &= (uint_t)(1<<3 | 1<<4);
-
-    asm volatile(
-        "movl %0, %%cr3"
-        :
-        :"r"(((uint_t)pdtbl & 0xFFFFF000) | attr)
-    );
-}
-
-static inline void 
-__attribute__((always_inline))
-pg_enable()
-{
-    uint_t cr0;
-    asm volatile(
-        "movl %%cr0, %0"
-        :"=r"(cr0)
-    );
-    
-    cr0 |= 0x80000000;
-    asm volatile(
-        "movl %0, %%cr0"
-        : 
-        :"r"(cr0)
-    );
-}
-
 
 #endif
