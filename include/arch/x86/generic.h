@@ -3,17 +3,11 @@
 
 #include <types.h>
 
-static inline void 
-io_wait()
-{
-    asm volatile("outb %%al, $0x80"::"a"(0));
-}
-
 static inline uchar_t
 inb(ushort_t port)
 {
     uchar_t res;
-    asm volatile("inb %1, %0" :"=a"(res) :"r"(port));
+    asm volatile("inb %1, %0" :"=a"(res) :"d"(port));
     return res;
 }
 
@@ -45,25 +39,25 @@ inl(ushort_t port)
     return res;
 }
 
-static inline void 
+static inline void
 outl(ushort_t port, uint_t cnt)
 {
     asm volatile("outl %1, %0" : : "r"(port), "a"(cnt));
 }
 
-static inline void 
+static inline void
 insb(ushort_t port, void* dst, int count)
 {
     asm volatile("cld;rep insl" : :"D"(dst), "c"(count), "d"(port) :"memory", "cc");
 }
 
-static inline void 
+static inline void
 insw(ushort_t port, void* dst, int count)
 {
     asm volatile("cld;rep insl" : :"D"(dst), "c"(count), "d"(port) :"memory", "cc");
 }
 
-static inline void 
+static inline void
 insl(ushort_t port, void* dst, int count)
 {
     asm volatile(
@@ -74,7 +68,7 @@ insl(ushort_t port, void* dst, int count)
     );
 }
 
-static inline void 
+static inline void
 outsb(ushort_t port, void* src, int count)
 {
     asm volatile(
@@ -85,7 +79,7 @@ outsb(ushort_t port, void* src, int count)
     );
 }
 
-static inline void 
+static inline void
 outsw(ushort_t port, void* src, int count)
 {
     asm volatile(
@@ -96,7 +90,7 @@ outsw(ushort_t port, void* src, int count)
     );
 }
 
-static inline void 
+static inline void
 outsl(ushort_t port, void* src, int count)
 {
     asm volatile(
@@ -107,7 +101,7 @@ outsl(ushort_t port, void* src, int count)
     );
 }
 
-static inline void 
+static inline void
 movsb(void* src, void* dst, int count)
 {
     asm volatile(
@@ -118,7 +112,7 @@ movsb(void* src, void* dst, int count)
     );
 }
 
-static inline void 
+static inline void
 movsw(void* src, void* dst, int count)
 {
     asm volatile(
@@ -129,7 +123,7 @@ movsw(void* src, void* dst, int count)
     );
 }
 
-static inline void 
+static inline void
 movsl(void* src, void* dst, int count)
 {
     asm volatile(
@@ -140,7 +134,7 @@ movsl(void* src, void* dst, int count)
     );
 }
 
-static inline void 
+static inline void
 stosb(void* dst, uchar_t cnt, int count)
 {
     asm volatile(
@@ -151,7 +145,7 @@ stosb(void* dst, uchar_t cnt, int count)
     );
 }
 
-static inline void 
+static inline void
 stosw(void* dst, ushort_t cnt, int count)
 {
     asm volatile(
@@ -162,7 +156,7 @@ stosw(void* dst, ushort_t cnt, int count)
     );
 }
 
-static inline void 
+static inline void
 stosl(void* dst, uint_t cnt, int count)
 {
     asm volatile(
@@ -173,7 +167,7 @@ stosl(void* dst, uint_t cnt, int count)
     );
 }
 
-static inline uint_t 
+static inline uint_t
 xchg(volatile uint_t *addr, uint_t newval)
 {
     uint_t result;

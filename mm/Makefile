@@ -2,7 +2,7 @@ $(info 内存管理代码处理中...)
 
 .PHONY: default all clean
 
-C_OBJS := memory.o mmap.o kmalloc.o
+C_OBJS := memory.o mmap.o kmalloc.o vm.o
 
 all: $(C_OBJS)
 	@echo "内存管理部分链接中...";

@@ -38,11 +38,11 @@ show_memory_map()
     }
 }
 
-void 
+void
 phy_mem_init()
 {
     uint_t start_addr, end_addr;
-    
+
     mmap_entry_t *mmap_start_addr = (mmap_entry_t *)glb_mboot_ptr->mmap_addr;
     mmap_entry_t *mmap_end_addr = (mmap_entry_t *)glb_mboot_ptr->mmap_addr + glb_mboot_ptr->mmap_length;
 
@@ -57,7 +57,7 @@ phy_mem_init()
 
     // 分页偏移，实现对齐
     start_addr = PAGE_ROUND_UP(start_addr), end_addr = PAGE_ROUND_DOWN(end_addr);
-    
+
     mem_map.free_list = (uint_t*)((uint_t)kern_end);
     while(end_addr>=start_addr){
         phy_mem_free((void*)end_addr);
@@ -68,7 +68,7 @@ phy_mem_init()
     kprintf("physical memory initialize finished, page count:%d\n", mem_map.page_count);
 }
 
-void* 
+void*
 phy_mem_alloc()
 {
     if(mem_map.header<0){
@@ -76,17 +76,21 @@ phy_mem_alloc()
     }
 
     uint_t min_addr = V2P(((uint_t)kern_end + mem_map.page_count*sizeof(uint_t)));
-    
     void *page = NULL;
     while((uint_t)page <= min_addr){
         page = (void*)mem_map.free_list[mem_map.header--];
     }
-    
     return page;
 }
 
-void 
+void
 phy_mem_free(void *addr)
 {
     mem_map.free_list[++mem_map.header] = PAGE_ROUND_DOWN((uint_t)addr);
+}
+
+void*
+virt_kern_addr()
+{
+    return (void*)((uint_t)kern_end + mem_map.page_count*sizeof(uint_t));
 }

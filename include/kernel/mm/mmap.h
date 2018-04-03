@@ -34,15 +34,15 @@
 #define PDE_4M              1 << 7                      // 4M页面
 
 // 页表项的标志位
-#define PTE_P               1 << 0                      // 
-#define PTE_RW              1 << 1                      // 
+#define PTE_P               1 << 0                      //
+#define PTE_RW              1 << 1                      //
 #define PTE_US              1 << 2                      //
 #define PTE_PWT             1 << 3                      //
 #define PTE_PCD             1 << 4                      //
 #define PTE_A               1 << 5                      //
 #define PTE_D               1 << 6                      //
 #define PTE_PS              1 << 7                      //
-#define PTE_G               1 << 8                      // 
+#define PTE_G               1 << 8                      //
 
 #define PTX(va) (((uint_t)(va) >> PTXSHIFT) & 0x3FF)    // 页表下标
 #define PDX(va) (((uint_t)(va) >> PDXSHIFT) & 0x3FF)    // 页目录下标
@@ -52,6 +52,9 @@
 #define MEM_NORMAL          0x38000000                  // 16～896M
 #define MEM_HIGH            0x40000000                  // 896～1G
 
+#define MEM_KERN            1 << 0                      // 内核空间
+#define MEM_USER            1 << 1                      // 用户空间
+
 // 页目录和页表的项数据类型
 typedef uint_t pde_t;                                   // 页目录项类型
 typedef uint_t pte_t;                                   // 页表项类型
@@ -60,16 +63,16 @@ typedef uint_t pte_t;                                   // 页表项类型
 void mmap_init();
 
 // pa=>va
-void mmap_do_map(pde_t *mmap, uint_t va, uint_t pa, uint_t flags);
+void mmap_do_map(pde_t *mmap, uint_t va, uint_t flags);
 
 // pa !=> va
 void mmap_do_unmap(pde_t *mmap, uint_t va);
 
-// 获取虚拟内存空间的空闲页
-void* mmap_alloc_page();
-
-// 释放虚拟内存页
-void mmap_free_page(void *addr);
+// // 获取虚拟内存空间的空闲页
+// void* mmap_alloc_page();
+//
+// // 释放虚拟内存页
+// void mmap_free_page(void *addr);
 
 // 申请虚拟内存区域
 //void* mmap_alloc_area();

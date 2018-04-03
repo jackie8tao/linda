@@ -1,9 +1,16 @@
 /*
  * ide硬盘的pio方式读写
+ *
+ * @author Jackie Tao <taodingfei@gmail.com>
+ * @date 2018-04-02 11:08
  */
 
 #include <drivers/ide.h>
 #include <types.h>
+#include <generic.h>
+#include <trap.h>
+#include <mm/kmalloc.h>
+#include <string.h>
 
 /*
  *       Reading the harddisk using ports!
@@ -56,22 +63,81 @@
  *  This code is for reading, the code for writing is the next article.
  */
 
-#define SECTOR_SIZE 512
+#define SECTORSZ        512             // 扇区大小
+#define BLOCKSZ         512             // 块大小
 
-static int 
+// ide命令
+#define IDE_CMD_READ    0x20
+#define IDE_CMD_WRITE   0x30
+#define IDE_CMD_RDMUL   0xC4
+#define IDE_CMD_WRMUL   0xC5
+
+// ide状态
+#define IDE_ERR         1 << 0
+#define IDE_DRY         1 << 3
+#define IDE_SRV         1 << 4
+#define IDE_DF          1 << 5
+#define IDE_RDY         1 << 6
+#define IDE_BSY         1 << 7
+
+void *buf;
+
+static int
 ide_wait()
 {
-
+    int status;
+    while(((status = inb(0x01F7)) & (IDE_BSY | IDE_RDY)) != IDE_RDY);
+    if(status & IDE_DF){
+        return -1;
+    }
+    return 0;
 }
 
-int 
-ide_read()
+void
+ide_handler(struct trapframe *frame)
 {
-
+    buf = (void*)kmalloc(BLOCKSZ);
+    kprintf("0x%X\n", buf);
+    insl(0x1F0, buf, BLOCKSZ/4);
+    kprintf("%s\n", (char*)buf);
 }
 
-int 
-ide_write()
+void
+ide_init()
+{
+    register_trap_handler(IRQ14, ide_handler);
+}
+
+int
+ide_read(uint_t lba)
+{
+    ide_wait();
+
+    // 打开中断
+    outb(0x3F6, 0x0);
+
+    outb(0x1F2, BLOCKSZ/SECTORSZ);
+    outb(0x1F3, lba & 0xFF);
+    outb(0x1F4, (lba >> 8) & 0xFF);
+    outb(0x1F5, (lba >> 16) & 0xFF);
+    outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
+    outb(0x1F7, 0x20);
+
+    return 1;
+}
+
+int
+ide_write(uint_t lba, char *cont)
 {
 
+    ide_wait();
+    outb(0x3F6, 0x0);
+
+    outb(0x1F2, BLOCKSZ/SECTORSZ);
+    outb(0x1F3, lba & 0xFF);
+    outb(0x1F4, (lba >> 8) & 0xFF);
+    outb(0x1F5, (lba >> 16) & 0xFF);
+    outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F) | (0 << 4));
+    outb(0x1F7, 0x30);
+    outsl(0x1F0, (void*)cont, BLOCKSZ/4);
 }

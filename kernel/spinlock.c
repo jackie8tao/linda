@@ -3,20 +3,20 @@
 #include <generic.h>
 #include <kprintf.h>
 
-void 
+void
 initlock(struct spinlock *lock, char *name)
 {
     lock->name = name;
     lock->locked = 0;
 }
 
-int 
+int
 holding(struct spinlock *lock)
 {
     return lock->locked;
 }
 
-void 
+void
 acquire(struct spinlock *lock)
 {
     cli();
@@ -29,7 +29,7 @@ acquire(struct spinlock *lock)
     sti();
 }
 
-void 
+void
 release(struct spinlock *lock)
 {
     cli();

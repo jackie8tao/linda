@@ -2,7 +2,7 @@ $(info 驱动部分处理中...)
 
 .PHONY: default all clean
 
-C_OBJS := console.o pic.o timer.o
+C_OBJS := console.o pic.o timer.o ide.o
 
 all: $(C_OBJS) $(A_OBJS)
 	@echo "驱动代码链接中...";

@@ -1,6 +1,6 @@
 #include <types.h>
 #include <mm/kmalloc.h>
-#include <mm/mmap.h>
+#include <mm/vm.h>
 #include <kprintf.h>
 #include <string.h>
 
@@ -17,7 +17,7 @@ struct kmem_chunk {
 static struct kmem_chunk *kmem_list = NULL;
 
 // 从空闲块中切割出一小块
-static void* 
+static void*
 chunk_split(struct kmem_chunk *chunk, uint_t size)
 {
     uint_t header_size = sizeof(struct kmem_chunk);
@@ -44,7 +44,7 @@ chunk_split(struct kmem_chunk *chunk, uint_t size)
 }
 
 // 合并相邻的空闲块
-static void 
+static void
 chunk_glue()
 {
     if(!kmem_list){
@@ -73,12 +73,12 @@ chunk_glue()
     }
 }
 
-static void* 
-alloc_free_chunk_from_mmap()
+static void*
+alloc_free_chunk_from_kvm()
 {
     uint_t header_size = sizeof(struct kmem_chunk);
 
-    struct kmem_chunk *chunk = mmap_alloc_page();
+    struct kmem_chunk *chunk = kvm_alloc_page();
     if(!chunk){
         kprintf("there is no enough free memory!\n");
         return NULL;
@@ -92,11 +92,11 @@ alloc_free_chunk_from_mmap()
     return (void*)chunk;
 }
 
-void* 
+void*
 kmalloc(uint_t size)
 {
     if(!kmem_list){
-        struct kmem_chunk *chunk = alloc_free_chunk_from_mmap();
+        struct kmem_chunk *chunk = alloc_free_chunk_from_kvm();
         if(!chunk){
             kprintf("cannot alloc any memory, sorry!\n");
             return NULL;
@@ -123,7 +123,7 @@ alloc_routine:
 
             chunk->status = KMEM_USED;
             res = chunk->addr;
-            
+
             break;
         }
 
@@ -134,7 +134,7 @@ alloc_routine:
         }
 
         if(!block->next){
-            struct kmem_chunk *next = alloc_free_chunk_from_mmap();
+            struct kmem_chunk *next = alloc_free_chunk_from_kvm();
             if(!next){
                 kprintf("cannot alloc any memory, sorry!\n");
                 res = NULL;
@@ -146,13 +146,13 @@ alloc_routine:
             goto alloc_routine; // 在内存合并之后，需要重新进行遍历查询
         }
 
-        block = block->next;       
+        block = block->next;
     }
 
     return res;
 }
 
-void 
+void
 kmfree(void *addr)
 {
     if(!kmem_list){
@@ -179,7 +179,7 @@ kmfree(void *addr)
     chunk_glue();// 内存释放完成之后，进行一次合并
 }
 
-void 
+void
 print_chunks()
 {
     if(!kmem_list){

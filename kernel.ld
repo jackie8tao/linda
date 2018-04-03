@@ -10,7 +10,7 @@ SECTIONS
 		*(multiboot_header)
 		*(.text)
 	}
-	.data : { 
+	.data : {
 		*(.data)
 	}
 	.rodata : {

@@ -27,7 +27,7 @@ static uint_t allowed_traps[] = {
     IRQ11, IRQ12, IRQ13, IRQ14, IRQ15
 };
 
-void 
+void
 trap_init()
 {
     memset((void*)idt, 0, sizeof(idt));
@@ -83,23 +83,26 @@ trap_init()
     kprintf("interrupt table initialize finished!\n");
 }
 
-void 
+void
 trap_handler_dispatcher(struct trapframe *frame)
 {
     if(frame->trapno >=40){
         outb(0xA0, 0x20);
     }
     outb(0x20, 0x20);
-    
+
     trap_handler_t handler = trap_handlers[frame->trapno];
     if(!handler){
-        kprintf("Trap[%d] has no handler!\n", frame->trapno);
+        if(frame->trapno != 39){
+            kprintf("Trap[%d] has no handler!\n", frame->trapno);
+        }
+
         return;
     }
     handler(frame);
 }
 
-void 
+void
 register_trap_handler(uint_t trapno, trap_handler_t handler)
 {
     int allowed_traps_count = sizeof(allowed_traps)/sizeof(uint_t);

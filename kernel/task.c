@@ -8,7 +8,7 @@
 // 系统进程号计数器
 static uint_t sys_pid = 0;
 
-struct task* 
+struct task*
 task_create()
 {
     struct task *task = kmalloc(sizeof(struct task));
@@ -20,18 +20,17 @@ task_create()
     task->size = 4096;
     task->parent = NULL;
     task->state = RUNABLE;
-    
+
 }
 
-int 
+int
 task_sleep()
 {
 
 }
 
-int 
+int
 task_run()
 {
 
 }
-
