@@ -3,7 +3,7 @@
 # 为了暂时的开发方便，这里舍弃了所有的可配置内容，
 # 统一使用默认设置，后续将会添加针对不同平台的配置。
 
-.PHONY: kernel image debug clean 
+.PHONY: kernel image debug clean
 
 ROOT := $(PWD)
 ARCH ?= x86
@@ -33,36 +33,35 @@ DRIVERS := drivers/drivers.o
 SUB_DIRS := arch init mm lib drivers
 
 lindasubdirs:
-	@echo "子目录处理中...";
+	@echo "linda subset directories is handing...";
 	@set -e; \
 	for dir in $(SUB_DIRS); \
 	  do $(MAKE) -C $$dir; \
-	done;						
+	done;
 
 kernel: lindasubdirs
-	@echo "内核构建中...";
+	@echo "kernel is building...";
 	$(LD) $(LD_FLAGS) -o linda.bin $(ARCHIVES) $(LIBS) $(DRIVERS)
 
 ISODIR := isodir/boot/grub
 image: kernel
-	@echo "内核映像文件创建中...";
+	@echo "kernel image is creating...";
 	rm -rf isodir;
 	mkdir -p $(ISODIR);
 	cp grub.cfg $(ISODIR);
 	cp linda.bin $(ISODIR)/../;
 	grub-mkrescue -o linda.iso $(ISODIR)/../../;
 
-debug: image kernel
-	@echo "bochs,内核调试";
+debug: image
+	@echo "debug kernel using bochs...";
 	bochs -f bochs.cfg
 
 clean:
-	@echo "目录清理中...";
+	@echo "directories is cleanning...";
 	rm -rf isodir;
-	@echo "文件清理中...";
+	@echo "files is cleanning...";
 	rm -rf *.o; rm -rf *.bin; rm -rf *.iso; \
 	set -e; \
 	for dir in $(SUB_DIRS); \
 	  do $(MAKE) -C $$dir clean; \
 	done; \
-	
