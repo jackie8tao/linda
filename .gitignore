@@ -3,3 +3,6 @@ CMakeLists.txt
 /.idea
 *.o
 *.img
+*.iso
+*.bin
+/isodir

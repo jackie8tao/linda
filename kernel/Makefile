@@ -1,6 +1,6 @@
 .PHONY: default all clean
 
-C_OBJS := sched.o task.o
+C_OBJS := spinlock.o
 
 all: $(C_OBJS)
 	$(LD) -r -o kernel.o $(C_OBJS);

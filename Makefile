@@ -27,10 +27,10 @@ ASM_FLAGS := -g
 C_FLAGS := -ffreestanding -std=gnu99 -g -Wall -Wextra
 LD_FLAGS := -T $(LINK_RULES) -g
 
-ARCHIVES := arch/$(ARCH)/arch.o init/init.o mm/mm.o
+ARCHIVES := arch/$(ARCH)/arch.o init/init.o mm/mm.o kernel/kernel.o
 LIBS := lib/lib.o
-DRIVERS := drivers/drivers.o
-SUB_DIRS := arch init mm lib drivers
+DRIVERS := drivers/drivers.o fs/fs.o
+SUB_DIRS := arch init mm lib drivers fs kernel
 
 lindasubdirs:
 	@echo "linda subset directories is handing...";

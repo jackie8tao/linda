@@ -4,8 +4,6 @@
 #include <types.h>
 
 void ide_init();
-
-int ide_read(uint_t);
-int ide_write(uint_t, char*);
+void ide_execute();
 
 #endif

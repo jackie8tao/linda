@@ -86,6 +86,7 @@ trap_init()
 void
 trap_handler_dispatcher(struct trapframe *frame)
 {
+    sti();
     if(frame->trapno >=40){
         outb(0xA0, 0x20);
     }
@@ -96,10 +97,11 @@ trap_handler_dispatcher(struct trapframe *frame)
         if(frame->trapno != 39){
             kprintf("Trap[%d] has no handler!\n", frame->trapno);
         }
-
+        cli();
         return;
     }
     handler(frame);
+    cli();
 }
 
 void

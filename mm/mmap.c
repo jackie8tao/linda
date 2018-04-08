@@ -14,8 +14,9 @@ page_fault_handler(struct trapframe *frame)
 {
     uint_t addr;
     asm volatile("movl %%cr2, %0":"=r"(addr):);
+    kprintf("address:0x%x\n", addr);
     mmap_do_map(kern_pgdir, addr, addr >= KERNBASE ? MEM_KERN : MEM_USER);
-
+    //asm volatile("xchg %bx, %bx");
     return;
 }
 

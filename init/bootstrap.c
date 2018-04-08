@@ -12,6 +12,8 @@
 #include <generic.h>
 #include <drivers/timer.h>
 #include <drivers/ide.h>
+#include <fs/buf.h>
+#include <string.h>
 
 extern uchar_t kern_start[];                // 内核文件在内存中的起始位置
 extern uchar_t kern_end[];                  // 内核文件在内存中的结束位置
@@ -67,9 +69,34 @@ kern_bootstrap(uint_t magic_num, uint_t mboot_info)
     kvm_init();
 
     timer_setup(timer_handler);
+
     ide_init();
+    buf_init();
 
     sti();
-    kprintf("0x%x\n", (uint_t)kmalloc(512));
-    kprintf("0x%x\n", (uint_t)kmalloc(512));
+
+    // ide写测试代码
+    // struct buf *buf = kmalloc(sizeof(struct buf));
+    // buf->dev = 0;
+    // buf->blockno = 1;
+    // char *cnt = "Hello world! Jackie!";
+    // for(int i=0; i<strlen(cnt); ++i){
+    //     buf->data[i] = cnt[i];
+    // }
+    // buf->data[strlen(cnt)] = '0';
+    // struct spinlock *lock = kmalloc(sizeof(struct spinlock));
+    // initlock(lock, "buf lock");
+    // buf->lock = lock;
+    // buf->flags = B_DIRTY;
+    // buf_write(buf);
+    // kprintf("0x%x\n", kmalloc(111));
+
+    // ide读测试代码
+    // struct buf *buf = buf_read(0, 0);
+    // while(1){
+    //     if(buf->flags & B_DIRTY){
+    //         kprintf("%s\n", buf->data);
+    //         break;
+    //     }
+    // }
 }

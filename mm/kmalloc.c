@@ -148,7 +148,6 @@ alloc_routine:
 
         block = block->next;
     }
-
     return res;
 }
 

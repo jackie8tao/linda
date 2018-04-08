@@ -11,6 +11,9 @@
 #include <trap.h>
 #include <mm/kmalloc.h>
 #include <string.h>
+#include <fs/fs.h>
+#include <fs/buf.h>
+#include <spinlock.h>
 
 /*
  *       Reading the harddisk using ports!
@@ -63,8 +66,7 @@
  *  This code is for reading, the code for writing is the next article.
  */
 
-#define SECTORSZ        512             // 扇区大小
-#define BLOCKSZ         512             // 块大小
+#define SECTOR_SIZE     512             // 扇区大小
 
 // ide命令
 #define IDE_CMD_READ    0x20
@@ -80,7 +82,7 @@
 #define IDE_RDY         1 << 6
 #define IDE_BSY         1 << 7
 
-void *buf;
+struct spinlock *idelock;
 
 static int
 ide_wait()
@@ -90,54 +92,58 @@ ide_wait()
     if(status & IDE_DF){
         return -1;
     }
+
     return 0;
 }
 
 void
 ide_handler(struct trapframe *frame)
 {
-    buf = (void*)kmalloc(BLOCKSZ);
-    kprintf("0x%X\n", buf);
-    insl(0x1F0, buf, BLOCKSZ/4);
-    kprintf("%s\n", (char*)buf);
+    struct buf *buf = buf_get();
+    acquire(buf->lock);
+    if((buf->flags & B_VALID) && !ide_wait()){
+        insl(0x1F0, (void*)(&buf->data), BLOCK_SIZE/4);
+        buf->flags = B_DIRTY;
+    }
+    release(buf->lock);
+    // 这里没有做读取是否成功的判断，需要完善
+    buf_remove(buf);
 }
 
 void
 ide_init()
 {
     register_trap_handler(IRQ14, ide_handler);
+    if(!idelock){
+        idelock = (struct spinlock*)kmalloc(sizeof(struct spinlock));
+        initlock(idelock, "ide lock");
+        if(!idelock){
+            kprintf("cannot initialize idelock!\n");
+            return;
+        }
+    }
 }
 
-int
-ide_read(uint_t lba)
+// 执行一次ide的读写任务
+void ide_execute()
 {
-    ide_wait();
-
-    // 打开中断
-    outb(0x3F6, 0x0);
-
-    outb(0x1F2, BLOCKSZ/SECTORSZ);
-    outb(0x1F3, lba & 0xFF);
-    outb(0x1F4, (lba >> 8) & 0xFF);
-    outb(0x1F5, (lba >> 16) & 0xFF);
-    outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
-    outb(0x1F7, 0x20);
-
-    return 1;
-}
-
-int
-ide_write(uint_t lba, char *cont)
-{
+    acquire(idelock);
+    struct buf *buf = buf_get();
+    if(!buf){
+        return;
+    }
 
     ide_wait();
     outb(0x3F6, 0x0);
-
-    outb(0x1F2, BLOCKSZ/SECTORSZ);
-    outb(0x1F3, lba & 0xFF);
-    outb(0x1F4, (lba >> 8) & 0xFF);
-    outb(0x1F5, (lba >> 16) & 0xFF);
-    outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F) | (0 << 4));
-    outb(0x1F7, 0x30);
-    outsl(0x1F0, (void*)cont, BLOCKSZ/4);
+    outb(0x1F2, BLOCK_SIZE/SECTOR_SIZE);
+    outb(0x1F3, buf->blockno & 0xFF);
+    outb(0x1F4, (buf->blockno >> 8) & 0xFF);
+    outb(0x1F5, (buf->blockno >> 16) & 0xFF);
+    outb(0x1F6, 0xE0 | ((buf->blockno >> 24) & 0x0F) | (buf->dev << 4));
+    if(buf->flags & B_DIRTY){
+        outb(0x1F7, IDE_CMD_WRITE);
+        outsl(0x1F0, (void*)(&buf->data), BLOCK_SIZE/4);
+    }else{
+        outb(0x1F7, IDE_CMD_READ);
+    }
 }

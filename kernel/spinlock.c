@@ -1,4 +1,4 @@
-#include <types.h>
+#include <types.h>asm volatile("xchg %bx, %bx");
 #include <spinlock.h>
 #include <generic.h>
 #include <kprintf.h>
@@ -21,7 +21,8 @@ acquire(struct spinlock *lock)
 {
     cli();
     if(holding(lock)){
-        kprintf("%s is locked!", lock->name);
+        // kprintf("%s is locked!", lock->name);
+        sti();
         return;
     }
 
@@ -34,7 +35,7 @@ release(struct spinlock *lock)
 {
     cli();
     if(!holding(lock)){
-        kprintf("%s lock is not locked!", lock->name);
+        // kprintf("%s lock is not locked!", lock->name);
         return;
     }
 
