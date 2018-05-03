@@ -1,6 +1,6 @@
 .PHONY: default all clean
 
-C_OBJS := memory.o mmap.o kmalloc.o vm.o
+C_OBJS := memory.o mmap.o kmalloc.o vmmgr.o
 
 all: $(C_OBJS)
 	$(LD) -r -o mm.o $(C_OBJS);

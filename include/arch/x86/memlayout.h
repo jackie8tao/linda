@@ -11,6 +11,7 @@
 #define KERNSIZE        0x40000000                              // 内核空间大小
 #define KERNLINK        (KERNBASE+EXTMEM)                       // 内核链接位置
 #define USERSIZE        0xC0000000                              // 用户空间大小
+#define KSTACKSIZE      4096                                    // 内核栈大小
 
 #define P2V(addr)       ((uint_t)(addr) + KERNBASE)             // 内核空间物理地址转为虚拟地址
 #define V2P(addr)       ((uint_t)(addr) - KERNBASE)             // 内核空间虚拟地址转为物理地址

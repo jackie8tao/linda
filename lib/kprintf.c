@@ -4,8 +4,10 @@
 #include <ctype.h>
 #include <kprintf.h>
 #include <drivers/console.h>
+#include <generic.h>
+#include <spinlock.h>
 
-static unsigned long 
+static unsigned long
 simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
 	unsigned long result = 0,value;
@@ -34,7 +36,7 @@ simple_strtoul(const char *cp,char **endp,unsigned int base)
 /* we use this so that we can do without the ctype library */
 #define is_digit(c)	((c) >= '0' && (c) <= '9')
 
-static int 
+static int
 skip_atoi(const char **s)
 {
 	int i=0;
@@ -58,7 +60,7 @@ __res = ((unsigned long) n) % (unsigned) base; \
 n = ((unsigned long) n) / (unsigned) base; \
 __res; })
 
-static char* 
+static char*
 number(char * str, long num, int base, int size, int precision
 	,int type)
 {
@@ -125,7 +127,7 @@ number(char * str, long num, int base, int size, int precision
 	return str;
 }
 
-static int 
+static int
 vsprintf(char *buf, const char *fmt, va_list args)
 {
 	int len;
@@ -146,7 +148,7 @@ vsprintf(char *buf, const char *fmt, va_list args)
 			*str++ = *fmt;
 			continue;
 		}
-			
+
 		/* process flags */
 		flags = 0;
 		repeat:
@@ -158,7 +160,7 @@ vsprintf(char *buf, const char *fmt, va_list args)
 				case '#': flags |= SPECIAL; goto repeat;
 				case '0': flags |= ZEROPAD; goto repeat;
 				}
-		
+
 		/* get field width */
 		field_width = -1;
 		if (is_digit(*fmt))
@@ -176,7 +178,7 @@ vsprintf(char *buf, const char *fmt, va_list args)
 		/* get the precision */
 		precision = -1;
 		if (*fmt == '.') {
-			++fmt;	
+			++fmt;
 			if (is_digit(*fmt))
 				precision = skip_atoi(&fmt);
 			else if (*fmt == '*') {
@@ -288,7 +290,7 @@ vsprintf(char *buf, const char *fmt, va_list args)
 	return str-buf;
 }
 
-int 
+int
 sprintf(char * buf, const char *fmt, ...)
 {
 	va_list args;
@@ -300,13 +302,13 @@ sprintf(char * buf, const char *fmt, ...)
 	return i;
 }
 
-// 最大输出字符为512
-int 
+// 最大输出字符为1024
+int
 kprintf(const char *fmt, ...)
 {
-	char buf[512];
+	char buf[1024];
 	int res;
-	
+
 	va_list args;
 	va_start(args, fmt);
 	res = vsprintf(buf, fmt, args);
@@ -321,8 +323,25 @@ kprintf(const char *fmt, ...)
 	return res;
 }
 
-int 
+// 最多输出1024个字符
+void
 panic(const char *fmt, ...)
 {
-	// 暂时不清楚怎么实现
+	pushcli();
+	// 简单的将提示信息打印处理，然后进入空循环
+	char buf[1024];
+	int res;
+
+	va_list args;
+	va_start(args, fmt);
+	res = vsprintf(buf, fmt, args);
+	if(!res){
+		console_write("panic has an error!");
+		for(;;);
+	}
+
+	console_write(buf);
+	va_end(args);
+	popcli();
+	for(;;);
 }

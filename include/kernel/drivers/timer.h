@@ -1,4 +1,4 @@
-/* 
+/*
  * 时钟硬件管理
  *
  * @author Jackie Tao <taodingfei@gmail.com>
@@ -11,6 +11,6 @@
 #include <types.h>
 #include <trap.h>
 
-void timer_setup(trap_handler_t handler);
+void timer_setup();
 
 #endif

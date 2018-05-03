@@ -3,9 +3,9 @@
 
 #include <types.h>
 
-#define ELF_MAGIC_NUM   0x464C457F
+#define ELF_MAGIC       0x464C457F      // elf文件魔数
 
-// ELF文件头
+// elf file header
 struct elf_hdr {
     uint_t      magic;
     uchar_t     ident[12];
@@ -24,7 +24,7 @@ struct elf_hdr {
     ushort_t    shstrndx;
 };
 
-// 执行代码
+// program section header
 struct prog_hdr {
     uint_t      type;
     uint_t      offset;
@@ -37,7 +37,7 @@ struct prog_hdr {
 
 };
 
-// 段
+//
 struct sect_hdr {
     uint_t      name;
     uint_t      type;

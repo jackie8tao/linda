@@ -1,6 +1,6 @@
 .PHONY: default all clean
 
-C_OBJS := console.o pic.o timer.o ide.o
+C_OBJS := console.o pic.o timer.o ide.o kbd.o
 
 all: $(C_OBJS) $(A_OBJS)
 	$(LD) -r -o drivers.o $(C_OBJS) $(A_OBJS)

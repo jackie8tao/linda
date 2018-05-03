@@ -14,6 +14,8 @@
 #include <fs/fs.h>
 #include <fs/buf.h>
 #include <spinlock.h>
+#include <kprintf.h>
+#include <types.h>
 
 /*
  *       Reading the harddisk using ports!
@@ -82,7 +84,7 @@
 #define IDE_RDY         1 << 6
 #define IDE_BSY         1 << 7
 
-struct spinlock *idelock;
+struct spinlock *idelock = NULL;
 
 static int
 ide_wait()
@@ -113,15 +115,12 @@ ide_handler(struct trapframe *frame)
 void
 ide_init()
 {
-    register_trap_handler(IRQ14, ide_handler);
+    idelock = (struct spinlock*)kmalloc(sizeof(struct spinlock));
+    initlock(idelock, "idelock");
     if(!idelock){
-        idelock = (struct spinlock*)kmalloc(sizeof(struct spinlock));
-        initlock(idelock, "ide lock");
-        if(!idelock){
-            kprintf("cannot initialize idelock!\n");
-            return;
-        }
+        panic("cannot initialize idelock!\n");
     }
+    register_trap_handler(IRQ14, ide_handler);
 }
 
 // 执行一次ide的读写任务

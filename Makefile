@@ -20,6 +20,9 @@ $(info 内核链接文件: $(LINK_RULES))
 AS := $(PREFIX)-as
 CC := $(PREFIX)-gcc
 LD := $(PREFIX)-ld
+OBJCOPY := $(PREFIX)-objcopy
+OBJDUMP := $(PREFIX)-objdump
+NM := $(PREFIX)-nm
 
 INCLUDE_FLAGS := -I $(ROOT)/include/kernel	\
 				-I $(ROOT)/include/arch/$(ARCH)
@@ -30,7 +33,8 @@ LD_FLAGS := -T $(LINK_RULES) -g
 ARCHIVES := arch/$(ARCH)/arch.o init/init.o mm/mm.o kernel/kernel.o
 LIBS := lib/lib.o
 DRIVERS := drivers/drivers.o fs/fs.o
-SUB_DIRS := arch init mm lib drivers fs kernel
+USRS := usr/bin/processA.bin usr/bin/processB.bin
+SUB_DIRS := arch init mm lib drivers fs kernel usr
 
 lindasubdirs:
 	@echo "linda subset directories is handing...";
@@ -41,7 +45,7 @@ lindasubdirs:
 
 kernel: lindasubdirs
 	@echo "kernel is building...";
-	$(LD) $(LD_FLAGS) -o linda.bin $(ARCHIVES) $(LIBS) $(DRIVERS)
+	$(LD) $(LD_FLAGS) -o linda.bin $(ARCHIVES) $(LIBS) $(DRIVERS) $(USRS)
 
 ISODIR := isodir/boot/grub
 image: kernel
@@ -54,7 +58,9 @@ image: kernel
 
 debug: image
 	@echo "debug kernel using bochs...";
-	bochs -f bochs.cfg
+	$(OBJCOPY) --only-keep-debug linda.bin linda.elf;
+	nm linda.elf | awk '{ print $$1" "$$3 }' > linda.sym;
+	bochs -f bochs.cfg;
 
 clean:
 	@echo "directories is cleanning...";

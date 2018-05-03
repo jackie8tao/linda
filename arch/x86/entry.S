@@ -27,7 +27,7 @@
 .section .data
 .align 4
 kstack_bottom:
-    .space 0x100000                 # 1M
+    .space 0x1000                   # 4096bytes
 kstack_top:
 # -------------------------------------------------------
 
@@ -65,7 +65,7 @@ kstack_top:
 .set USER_CODE, SGP_CODE | SGP_READABLE | SGP_USER | SGP_PRESENT | SGP_NSYS
 .set USER_DATA, SGP_READABLE | SGP_USER | SGP_PRESENT | SGP_NSYS
 
-# gdt表初始化
+# gdt表初始化, 后续内核初始化的时候会重新调整gdt表
 .section .rodata
 .align 4
 gdtable:

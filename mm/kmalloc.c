@@ -1,8 +1,9 @@
 #include <types.h>
 #include <mm/kmalloc.h>
-#include <mm/vm.h>
+#include <mm/vmmgr.h>
 #include <kprintf.h>
 #include <string.h>
+#include <mach.h>
 
 #define KMEM_USED       0
 #define KMEM_FREE       1
@@ -22,13 +23,11 @@ chunk_split(struct kmem_chunk *chunk, uint_t size)
 {
     uint_t header_size = sizeof(struct kmem_chunk);
     if(chunk->size <= (size + header_size)){
-        kprintf("kmem chunk does`t have enough size!\n");
-        return NULL;
+        panic("chunk_split: kmem chunk does`t have enough size!\n");
     }
 
     if(chunk->status != KMEM_FREE){
-        kprintf("cannot split used kmem chunk!\n");
-        return NULL;
+        panic("chunk_split: cannot split used kmem chunk!\n");
     }
 
     struct kmem_chunk *split = (struct kmem_chunk*)((uint_t)chunk->addr + size);
@@ -48,8 +47,7 @@ static void
 chunk_glue()
 {
     if(!kmem_list){
-        kprintf("these is no memory chunk to glue!\n");
-        return;
+        panic("chunk_glue: these is no memory chunk to glue!\n");
     }
 
     uint_t header_size = sizeof(struct kmem_chunk);
@@ -80,11 +78,10 @@ alloc_free_chunk_from_kvm()
 
     struct kmem_chunk *chunk = kvm_alloc_page();
     if(!chunk){
-        kprintf("there is no enough free memory!\n");
-        return NULL;
+        panic("kmalloc: there is no enough free memory!\n");
     }
 
-    chunk->size = PAGE_SIZE - header_size;
+    chunk->size = PGSIZE - header_size;
     chunk->status = KMEM_FREE;
     chunk->addr = (void*)((uint_t)chunk + header_size);
     chunk->next = NULL;
@@ -98,13 +95,11 @@ kmalloc(uint_t size)
     if(!kmem_list){
         struct kmem_chunk *chunk = alloc_free_chunk_from_kvm();
         if(!chunk){
-            kprintf("cannot alloc any memory, sorry!\n");
-            return NULL;
+            panic("kmalloc: annot alloc any memory, sorry!\n");
         }
 
         kmem_list = chunk;
     }
-
 
     void *res = NULL;
     struct kmem_chunk *block = kmem_list;
@@ -136,7 +131,7 @@ alloc_routine:
         if(!block->next){
             struct kmem_chunk *next = alloc_free_chunk_from_kvm();
             if(!next){
-                kprintf("cannot alloc any memory, sorry!\n");
+                kprintf("kmalloc: cannot alloc any memory, sorry!\n");
                 res = NULL;
                 break;
             }
@@ -166,7 +161,7 @@ kmfree(void *addr)
             continue;
         }
 
-        if(chunk->addr <= addr && ((uint_t)chunk->addr + chunk->size) > addr){
+        if(chunk->addr <= addr && ((uint_t)chunk->addr + chunk->size) > (uint_t)addr){
             chunk->status = KMEM_FREE;
             memset(chunk->addr, 0, chunk->size);
             break;
@@ -178,12 +173,12 @@ kmfree(void *addr)
     chunk_glue();// 内存释放完成之后，进行一次合并
 }
 
+// 调试使用，打印出内存链表
 void
 print_chunks()
 {
     if(!kmem_list){
-        kprintf("no memory!\n");
-        return;
+        panic("print_chunks : no memory!\n");
     }
 
     struct kmem_chunk *chunk = kmem_list;

@@ -7,13 +7,17 @@
 #include <mm/memory.h>
 #include <mm/mmap.h>
 #include <mm/kmalloc.h>
-#include <mm/vm.h>
+#include <mm/vmmgr.h>
 #include <trap.h>
 #include <generic.h>
 #include <drivers/timer.h>
 #include <drivers/ide.h>
 #include <fs/buf.h>
 #include <string.h>
+#include <syscall.h>
+#include <process.h>
+#include <scheduler.h>
+#include <drivers/kbd.h>
 
 extern uchar_t kern_start[];                // 内核文件在内存中的起始位置
 extern uchar_t kern_end[];                  // 内核文件在内存中的结束位置
@@ -45,58 +49,30 @@ show_kernel_info()
     kprintf("kernel_start_addr:0x%X, kernel_end_addr:0x%X\n", kern_start, kern_end);
 }
 
-static void
-timer_handler(struct trapframe *frame)
-{
-
-}
-
 void
 kern_bootstrap(uint_t magic_num, uint_t mboot_info)
 {
+    extern char _binary_processB_start[], _binary_processB_size[];
+    extern char _binary_processC_start[], _binary_processC_size[];
+
     init_glb_mboot(magic_num, mboot_info);
-
     console_init();
-
     show_welcome_msg();
     show_kernel_info();
     show_memory_map();
-
     trap_init();
-
     phy_mem_init();
-    mmap_init();
+    kmap_init();
     kvm_init();
-
-    timer_setup(timer_handler);
-
+    kbd_init();
+    timer_setup();
+    syscall_init();
     ide_init();
     buf_init();
-
+    segment_init();
+    process_init();
     sti();
 
-    // ide写测试代码
-    // struct buf *buf = kmalloc(sizeof(struct buf));
-    // buf->dev = 0;
-    // buf->blockno = 1;
-    // char *cnt = "Hello world! Jackie!";
-    // for(int i=0; i<strlen(cnt); ++i){
-    //     buf->data[i] = cnt[i];
-    // }
-    // buf->data[strlen(cnt)] = '0';
-    // struct spinlock *lock = kmalloc(sizeof(struct spinlock));
-    // initlock(lock, "buf lock");
-    // buf->lock = lock;
-    // buf->flags = B_DIRTY;
-    // buf_write(buf);
-    // kprintf("0x%x\n", kmalloc(111));
-
-    // ide读测试代码
-    // struct buf *buf = buf_read(0, 0);
-    // while(1){
-    //     if(buf->flags & B_DIRTY){
-    //         kprintf("%s\n", buf->data);
-    //         break;
-    //     }
-    // }
+    uinitproc_setup();
+    scheduler();
 }

@@ -1,6 +1,6 @@
 .PHONY: default all clean
 
-C_OBJS := spinlock.o
+C_OBJS := spinlock.o process.o scheduler.o syscall.o sysapi.o
 
 all: $(C_OBJS)
 	$(LD) -r -o kernel.o $(C_OBJS);

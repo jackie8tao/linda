@@ -1,5 +1,5 @@
 /*
- * 虚拟内存空间管理
+ * 内核虚拟空间和用户虚拟空间管理，主要负责页分配
  *
  * @author Jackie Tao <taodingfei@gmail.com>
  * @date 2018-04-02
@@ -11,31 +11,30 @@
 #include <types.h>
 #include <memlayout.h>
 #include <mm/mmap.h>
+#include <mach.h>
 
-#define VM_USED     1
-#define VM_FREE     0
+#define VM_USED     1 << 0
+#define VM_MAPPED   1 << 1
+
+#define NVMBLOCKS   KERNSIZE/PGSIZE
 
 struct vm_block{
     uint_t address;
     char status;
 };
 
-// 初始化内核空间内存页表
 void kvm_init();
 
-// 申请内核空间页
 void* kvm_alloc_page();
 
-// 释放内核空间页
 void kvm_free_page(void*);
 
-// 初始化用户空间内存页表
-void uvm_init();
+void* kvm_map_page(void*);
 
-// 申请用户空间页
-void* uvm_alloc_page();
+void* kvm_alloc_umapped_page();
 
-// 释放用户空间页
-void uvm_free_page(void*);
+void* kvm_unmap_page(void *addr);
+
+void* kvm_map_page(void *addr);
 
 #endif

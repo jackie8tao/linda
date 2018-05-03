@@ -3,6 +3,7 @@
 #include <mm/memory.h>
 #include <kprintf.h>
 #include <memlayout.h>
+#include <mach.h>
 
 extern char kern_start[];
 extern char kern_end[];
@@ -17,6 +18,7 @@ static struct {
 
 typedef struct multiboot_mmap_entry mmap_entry_t;
 
+// 输出BIOS提供的物理内存布局
 void
 show_memory_map()
 {
@@ -34,10 +36,11 @@ show_memory_map()
             (uint_t)mmap->type);
         }
     }else{
-        kprintf("it`s not a valid multiboot mmap struct!");
+        panic("show_memory_map: it`s not a valid multiboot mmap struct!\n");
     }
 }
 
+// 初始化物理内存管理系统
 void
 phy_mem_init()
 {
@@ -56,18 +59,19 @@ phy_mem_init()
     }
 
     // 分页偏移，实现对齐
-    start_addr = PAGE_ROUND_UP(start_addr), end_addr = PAGE_ROUND_DOWN(end_addr);
+    start_addr = PGROUNDUP(start_addr), end_addr = PGROUNDDOWN(end_addr);
 
     mem_map.free_list = (uint_t*)((uint_t)kern_end);
     while(end_addr>=start_addr){
         phy_mem_free((void*)end_addr);
-        end_addr -= PAGE_SIZE;
+        end_addr -= PGSIZE;
         mem_map.page_count++;
     }
 
     kprintf("physical memory initialize finished, page count:%d\n", mem_map.page_count);
 }
 
+// 申请一页物理内存
 void*
 phy_mem_alloc()
 {
@@ -75,20 +79,17 @@ phy_mem_alloc()
         return NULL;
     }
 
-    uint_t min_addr = V2P(((uint_t)kern_end + mem_map.page_count*sizeof(uint_t)));
-    void *page = NULL;
-    while((uint_t)page <= min_addr){
-        page = (void*)mem_map.free_list[mem_map.header--];
-    }
-    return page;
+    return (void*)mem_map.free_list[mem_map.header--];
 }
 
+// 释放物理内存
 void
 phy_mem_free(void *addr)
 {
-    mem_map.free_list[++mem_map.header] = PAGE_ROUND_DOWN((uint_t)addr);
+    mem_map.free_list[++mem_map.header] = PGROUNDDOWN((uint_t)addr);
 }
 
+// 获取内核数据边界，这里返回的是虚拟地址
 void*
 virt_kern_addr()
 {

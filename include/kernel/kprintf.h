@@ -4,7 +4,9 @@
 #include <stdarg.h>
 
 int sprintf(char *buf, const char *fmt, ...);
+
 int kprintf(const char *fmt, ...);
-int panic(const char *fmt, ...);
+
+void panic(const char *fmt, ...);
 
 #endif

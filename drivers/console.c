@@ -3,6 +3,9 @@
 #include <generic.h>
 #include <drivers/console.h>
 #include <memlayout.h>
+#include <spinlock.h>
+
+struct spinlock cons;
 
 #define TML_ROWS 25                                         // 文本模式下25行
 #define TML_COLUMNS 80                                      // 文本模式下80列
@@ -15,16 +18,17 @@ static ushort_t* console_fb = (ushort_t*)(P2V(0xB8000));    // 文本模式下�
 static void
 console_scroll()
 {
-    if (console_y >= TML_ROWS) {
-        for (int row = 0; row < TML_ROWS; row++){
-            for (int col = 0; col < TML_COLUMNS; col++) {
+    int row, col;
+    if (console_y >= TML_ROWS-1) {
+        for (row = 0; row < TML_ROWS; row++){
+            for (col = 0; col < TML_COLUMNS; col++) {
                 const int dstIndex = row * TML_COLUMNS + col;
                 const int srcIndex = (row + 1) * TML_COLUMNS + col;
 
                 console_fb[dstIndex] = console_fb[srcIndex];
             }
-            console_y--;
         }
+        console_y--;
     }
 }
 
@@ -49,6 +53,7 @@ console_setcolor(ushort_t cnt, enum vga_color fg, enum vga_color bg)
     return cnt | (ushort_t)color << 8;
 }
 
+// console初始化
 void
 console_init()
 {
@@ -59,11 +64,14 @@ console_init()
             console_fb[y * TML_COLUMNS + x] = console_setcolor((ushort_t)' ', VGA_LIGHT_GREY, VGA_BLACK);
         }
     }
+    initlock(&cons, "console lock");
 }
 
+// 默认颜色输出字符
 void
 console_put(char cnt)
 {
+    acquire(&cons);
     const int index = console_y * TML_COLUMNS + console_x;
     if(cnt == '\n'){
         console_y++;
@@ -77,14 +85,17 @@ console_put(char cnt)
         console_x++;
     }
 
-    if(console_x >= TML_COLUMNS){
+    if(console_x >= TML_COLUMNS-1){
         console_y++;
+        console_x = 0;
     }
 
     console_scroll();
     console_move();
+    release(&cons);
 }
 
+// 默认颜色输出字符串
 void
 console_write(char* cnt)
 {
@@ -94,9 +105,11 @@ console_write(char* cnt)
     }
 }
 
-void 
+// 自定义颜色输出字符
+void
 console_put_color(char cnt, enum vga_color fg, enum vga_color bg)
 {
+    acquire(&cons);
     const int index = console_y * TML_COLUMNS + console_x;
     if(cnt == '\n'){
         console_y++;
@@ -116,13 +129,33 @@ console_put_color(char cnt, enum vga_color fg, enum vga_color bg)
 
     console_scroll();
     console_move();
+    release(&cons);
 }
 
-void 
+// 自定义颜色输出字符串
+void
 console_write_color(char *cnt, enum vga_color fg, enum vga_color bg)
 {
     int len = strlen(cnt);
     for (int i = 0; i < len; i++) {
         console_put_color(cnt[i], fg, bg);
     }
+}
+
+// 清屏
+void
+console_clear()
+{
+    // acquire(&cons);
+    int i, j, index;
+    for(i=0; i<TML_ROWS; ++i){
+        for(j=0; j<TML_COLUMNS; ++j){
+            index = i*TML_COLUMNS+j;
+            console_fb[index] = console_setcolor((ushort_t)' ', VGA_LIGHT_GREY, VGA_BLACK);
+        }
+    }
+
+    console_x = 0, console_y = 0;
+    console_move();
+    // release(&cons);
 }

@@ -13,8 +13,15 @@ struct spinlock{
 };
 
 void initlock(struct spinlock*, char*);
+
 void acquire(struct spinlock*);
+
 void release(struct spinlock*);
+
 int holding(struct spinlock*);
+
+void pushcli();
+
+void popcli();
 
 #endif

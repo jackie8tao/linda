@@ -26,9 +26,15 @@ enum vga_color {
 };
 
 void console_init();
+
 void console_put(char cnt);
+
 void console_put_color(char cnt, enum vga_color fg, enum vga_color bg);
+
+void console_clear();
+
 void console_write(char *cnt);
+
 void console_write_color(char *cnt, enum vga_color fg, enum vga_color bg);
 
 #endif

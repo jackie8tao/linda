@@ -10,10 +10,8 @@
 
 #include <types.h>
 
-// 中断号重新映射
 void pic_remap(ushort_t master_offset, ushort_t slave_offset);
 
-// 关闭pic硬件
 void pic_disable();
 
 #endif
